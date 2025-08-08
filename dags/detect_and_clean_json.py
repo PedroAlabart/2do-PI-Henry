@@ -32,14 +32,22 @@ def clean_json(**kwargs):
     cleaned_json_path = '/tmp/cleaned_data.json'
     with open(cleaned_json_path, 'w') as f:
         json.dump(json_data, f, indent=2)
+        # Subir CSV limpio a bucket modulo-2-pi-silver, carpeta cleaned/
 
+    target_bucket = 'modulo-2-pi-silver'
+    target_key = 'cleaned/2025-08-08.jsonv'
+    hook.load_file(
+        filename=cleaned_json_path,
+        key=target_key,
+        bucket_name=target_bucket,
+        replace=True
+    )
     print(f"Cleaned JSON saved to {cleaned_json_path}")
 
 # DEFINICIÓN DEL DAG
 with DAG(
     dag_id='clean_json_from_s3',
     start_date=datetime(2025, 8, 1),
-    schedule_interval=None,
     catchup=False,
     tags=["s3", "json", "cleaning"]
 ) as dag:

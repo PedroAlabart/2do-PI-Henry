@@ -34,10 +34,21 @@ def clean_csv(**kwargs):
     df = df.dropna()
     df['Price'] = df['Price'].astype(float)
     
-    # Guardar resultado limpio local (o subirlo de nuevo a S3 si querés)
+    # Guardar local temporalmente
     cleaned_path = '/tmp/cleaned_file.csv'
     df.to_csv(cleaned_path, index=False)
-    print(f"Cleaned CSV saved to {cleaned_path}")
+    
+    # Subir CSV limpio a bucket modulo-2-pi-silver, carpeta cleaned/
+    target_bucket = 'modulo-2-pi-silver'
+    target_key = 'cleaned/products-1000-cleaned.csv'
+    hook.load_file(
+        filename=cleaned_path,
+        key=target_key,
+        bucket_name=target_bucket,
+        replace=True
+    )
+    
+    print(f"Cleaned CSV uploaded to s3://{target_bucket}/{target_key}")
 
 with DAG(
     's3_file_detection_and_cleaning',
