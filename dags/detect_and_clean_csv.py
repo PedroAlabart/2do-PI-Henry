@@ -5,9 +5,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import io
 
-BUCKET_NAME = 'tu-bucket-s3'
-CSV_KEY = 'path/to/your/file.csv'
-JSON_KEY = 'path/to/your/file.json'
+BUCKET_NAME = 'modulo-2-pi-bronze'
+CSV_KEY = 'products-1000/products-1000.csv'
 
 default_args = {
     'owner': 'airflow',
@@ -44,7 +43,7 @@ with DAG(
     's3_file_detection_and_cleaning',
     default_args=default_args,
     description='Detect CSV and JSON in S3, clean CSV data',
-    schedule_interval=timedelta(hours=1),
+    schedule=timedelta(hours=1),
     start_date=datetime(2025, 8, 8),
     catchup=False,
     max_active_runs=1,
