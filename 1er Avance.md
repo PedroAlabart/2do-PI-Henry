@@ -11,9 +11,8 @@ Transformacion: Airflow para limpiar la base de datos
 Load: Cargado a un refined mart en un futuro data warehouse
 
 Almacenamiento:
--bronce se da en S3 de amazon
--silver tambien
--gold tambien
+-bronce se da en S3 de amazon. En formato csv y json
+-silver tambien se hace en S3, depues de pasar por transformaciones en la data
 
 
 Capas de la data:
@@ -94,3 +93,10 @@ Posible ruido en casos con pocas reviews totales, pero mitigable filtrando.
 docker run tiene que ser llamado con
 
 docker run -e ACCESS_KEY=ACCES_KEY -e SECRET_ACCESS_KEY=SECRET_ACCESS_KEY henry-2do-pi
+
+Las transformaciones de data pasan del bucket modulo-2-pi-bronze a modulo-2-pi-silver utilizando airflow con sus DAGs
+
+No se opta por una capa oro debido al bajo nivel tecnico requerido en la transformacion de datos.
+
+Tuve que darle permisos desde IAM a un usuario de aws externo que orquestre airflow.
+
