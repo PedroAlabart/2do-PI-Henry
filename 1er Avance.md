@@ -1,102 +1,118 @@
-Pipeline:
+🛒 Product Data Pipeline
+Este proyecto implementa un pipeline de procesamiento, limpieza y análisis de datos de productos, con foco en sus características comerciales y precios en USD. Está diseñado para escalar sobre una arquitectura modular y basada en capas, utilizando Airflow y almacenamiento en la nube (AWS S3).
 
-Procesar, limpiar y analizar datos de alojamientos de Airbnb en Nueva York
+📦 Objetivo
+Procesar datos de productos, limpiarlos, transformarlos y almacenarlos en capas organizadas (Bronze, Silver y potencialmente Gold) para su análisis posterior. Este pipeline permite identificar insights como productos más rentables, disponibilidad por categoría o comportamiento de precios.
 
-Fuentes de datos: CSV
+🔗 Fuentes de Datos
+Tipo: Archivos CSV estructurados.
 
-Ingesta: Airflow, sensor detecta que se cargo un csv a la carpeta
+Ejemplo de campos:
 
-Transformacion: Airflow para limpiar la base de datos
+Name, Description, Brand, Category
 
-Load: Cargado a un refined mart en un futuro data warehouse
+Price (USD), Currency, Stock, EAN
 
-Almacenamiento:
--bronce se da en S3 de amazon. En formato csv y json
--silver tambien se hace en S3, depues de pasar por transformaciones en la data
+Color, Size, Availability, Internal ID
 
+⚙️ Estructura del Pipeline
+🔹 Ingesta
+Orquestada por Airflow.
 
-Capas de la data:
-Bronze: Se copia y pega la data, se modifica el formato de archivo a parquet y se crean particiones.
-Origen : Csv, parquet y json
-Destino: parquet
-Se comprime los distintos formatos usando Snappy
-Particionamiento por fecha. Año > Mes > Dia
-Retencion (life cycle) de la data muy alta. Data histórica. 3 años.
-Silver:
-Se manejan todos archivos ya formateados a parquet
-Se sigue comprimiendo con Snappy.
-Particionamiento por fecha. Año > Mes > Dia
-Retencion (life cycle) de la data alta. Data histórica. 1.5 años.
-En esta capa se realizan las transformaciones necesarias. Ver anexo.
-
-Gold:
-Se manejan todos archivos ya formateados a parquet
-Se sigue comprimiendo con Snappy.
-Particionamiento por fecha. Año > Mes > Dia
-Retencion (life cycle) de la data baja. 0.5 años.
+Un sensor diariamente chequea un bucket S3 para ver cuando se sube un nuevo archivo CSV y JSON.
 
 
+Los archivos es copiado a la capa Bronze en S3.
+
+🔹 Transformación
+Aplicada desde DAGs de Airflow.
+
+Conversión a Parquet, compresión con Snappy y particionamiento por fecha.
+
+Se eliminan inconsistencias, se validan tipos de datos y se estandarizan campos.
+
+🔹 Carga
+Los datos refinados se cargan a la capa Silver en S3.
+
+Futuramente se integrarán con un data mart o data warehouse para análisis BI.
+
+🗂️ Almacenamiento por Capas (Data Lake)
+🥉 Bronze Layer
+Origen: CSV, JSON o Parquet.
+
+Destino: Archivos Parquet.
+
+Compresión: Snappy.
+
+Particionamiento: Año > Mes > Día (basado en fecha de procesamiento).
+
+Transformación: Solo cambio de formato y organización.
+
+Retención: Alta (3 años). Conservación de data cruda e histórica.
+
+🥈 Silver Layer
+Origen: Archivos Parquet provenientes de la capa Bronze.
+
+Transformaciones:
+
+Conversión de precios a dólares si fuera necesario.
+
+Normalización de disponibilidad (backorder, pre_order, etc.).
+
+Limpieza de descripciones, verificación de EANs.
+
+Compresión: Snappy.
+
+Particionamiento: Año > Mes > Día.
+
+Retención: Media (1.5 años).
+
+🥇 Gold Layer (No implementada en esta versión)
+Se reservó espacio para futuras métricas o reportes.
+
+Debido al bajo nivel de transformación requerido, no se implementó en esta entrega.
+
+Retención estimada: Baja (0.5 años).
+
+🗺️ Diagrama de Arquitectura
+![Arquitectura del Pipeline](images/architecture.png)
 
 
-✅ Pregunta de Negocio 1:
-¿Qué barrios de Nueva York ofrecen la mejor rentabilidad promedio para los anfitriones de Airbnb?
-🎯 Relación con el pipeline:
-Esta pregunta busca identificar oportunidades de inversión o de optimización de precios en función del ingreso potencial por barrio.
 
-🔍 Fuente de datos:
-Fuente externa: Dataset público de Airbnb NYC (.csv descargado de Inside Airbnb)
+❓ Preguntas de Negocio
+✅ 1. ¿Qué categorías de productos tienen mayor valor promedio por unidad?
+🎯 Objetivo: Identificar oportunidades de margen alto y diseñar estrategias de precios.
 
-Contiene: price, availability_365, neighbourhood, room_type, reviews_per_month, calculated_host_listings_count, etc.
+📊 Datos requeridos: Category, Price, Currency, Stock
 
-📊 Relevancia y valor analítico:
-Alta relevancia: Los campos price y availability_365 permiten estimar ingresos anuales por propiedad.
+📈 Ejemplo de métrica:
 
-neighbourhood permite comparar barrios.
+```sql
+Precio promedio por categoría = AVG(Price) GROUP BY Category
+```
+✅ 2. ¿Qué disponibilidad de stock tienen los productos con precio mayor a $500 USD?
+🎯 Objetivo: Evaluar la capacidad de entrega de productos premium.
 
-room_type ayuda a segmentar por tipo de alojamiento.
+📊 Datos requeridos: Price, Availability, Stock
 
-Ejemplo de métrica a calcular:
-Ingresos estimados por propiedad = price × availability_365
+🧮 Ejemplo de lógica:
 
-✅ Confiabilidad:
-Fuente confiable y usada por múltiples investigaciones académicas y comerciales.
+```sql
+SELECT Name, Price, Availability, Stock
+FROM products
+WHERE Price > 500
+```
+🐳 Uso con Docker
+El pipeline puede ejecutarse usando Docker con variables de entorno para las credenciales de AWS:
 
-Los datos son reales y provienen de scrapeos regulares del sitio de Airbnb.
+```bash
+docker run \
+  -e ACCESS_KEY=YOUR_ACCESS_KEY \
+  -e SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY \
+  henry-2do-pi
 
-Pueden tener cierto delay temporal, pero son suficientemente representativos.
+```
+🔐 Permisos y Seguridad
+Se otorgaron permisos IAM a un usuario externo de AWS para que pueda orquestar Airflow y acceder a los buckets.
 
-✅ Pregunta de Negocio 2:
-¿Cuáles son las características comunes de los listados con mayor cantidad de reseñas por mes?
-🎯 Relación con el pipeline:
-Esta pregunta apunta a entender qué factores (zona, tipo de habitación, precio, disponibilidad) hacen que un alojamiento sea más popular o exitoso.
-
-🔍 Fuente de datos:
-Fuente externa: Dataset de Airbnb NYC
-
-Variables clave: reviews_per_month, price, room_type, minimum_nights, neighbourhood, availability_365
-
-📊 Relevancia y valor analítico:
-Muy alta: permite descubrir patrones que aumentan la visibilidad o rotación de huéspedes.
-
-Contribuye a estrategias de mejora de posicionamiento en la plataforma Airbnb.
-
-Se puede aplicar análisis de correlación o clustering para encontrar grupos de alto rendimiento.
-
-✅ Confiabilidad:
-Datos históricos obtenidos de la misma fuente pública.
-
-La métrica reviews_per_month ya viene calculada, lo que simplifica el análisis.
-
-Posible ruido en casos con pocas reviews totales, pero mitigable filtrando.
-
-
-docker run tiene que ser llamado con
-
-docker run -e ACCESS_KEY=ACCES_KEY -e SECRET_ACCESS_KEY=SECRET_ACCESS_KEY henry-2do-pi
-
-Las transformaciones de data pasan del bucket modulo-2-pi-bronze a modulo-2-pi-silver utilizando airflow con sus DAGs
-
-No se opta por una capa oro debido al bajo nivel tecnico requerido en la transformacion de datos.
-
-Tuve que darle permisos desde IAM a un usuario de aws externo que orquestre airflow.
-
+El acceso está limitado a las acciones necesarias para la ingesta, transformación y carga de datos.
