@@ -81,6 +81,10 @@ Retención estimada: Baja (0.5 años).
 Ejemplo del life cycle en la capa bronze
 ![life cycle en la capa bronze](images/bronze_lifecycle.png)
 
+Dags corriendo perfectamente
+![Dags](images/dags.png)
+(Los primeros 3 fueron durante el proceso de debugging)
+
 ❓ Preguntas de Negocio
 ✅ 1. ¿Qué categorías de productos tienen mayor valor promedio por unidad?
 🎯 Objetivo: Identificar oportunidades de margen alto y diseñar estrategias de precios.
