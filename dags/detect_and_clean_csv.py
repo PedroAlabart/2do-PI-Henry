@@ -37,11 +37,11 @@ def clean_csv(**kwargs):
     
     # Guardar local temporalmente
     cleaned_path = '/tmp/cleaned_file.csv'
-    df.to_csv(cleaned_path, index=False)
+    df.to_parquet(cleaned_path, index=False)
     
     # Subir CSV limpio a bucket modulo-2-pi-silver, carpeta cleaned/
     target_bucket = 'modulo-2-pi-silver'
-    target_key = 'cleaned/products-1000-cleaned.csv'
+    target_key = 'cleaned/products-1000-cleaned.parquet'
     hook.load_file(
         filename=cleaned_path,
         key=target_key,

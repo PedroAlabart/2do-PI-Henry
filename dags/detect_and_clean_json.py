@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from dags_util import check_file_exists
+import pandas as pd
 # CONSTANTES
 BUCKET_NAME = 'modulo-2-pi-bronze'
 JSON_KEY = 'valor_dolar/2025-08-08.json'
@@ -27,23 +28,27 @@ def clean_json(**kwargs):
     for field in required_fields:
         if field not in json_data:
             raise ValueError(f"Field {field} missing in JSON data")
-    
+
     json_data["compra"] = float(json_data["compra"])
     json_data["venta"] = float(json_data["venta"])
-    
-    cleaned_json_path = '/tmp/cleaned_data.json'
-    with open(cleaned_json_path, 'w') as f:
-        json.dump(json_data, f, indent=2)
-        # Subir CSV limpio a bucket modulo-2-pi-silver, carpeta cleaned/
 
+    # Convertir a DataFrame de pandas
+    df = pd.DataFrame([json_data])
+
+    # Guardar como archivo Parquet
+    cleaned_json_path = '/tmp/cleaned_data.parquet'
+    df.to_parquet(cleaned_json_path, index=False)
+
+    # Subir al bucket
     target_bucket = 'modulo-2-pi-silver'
-    target_key = 'cleaned/2025-08-08.json'
+    target_key = 'cleaned/2025-08-08.parquet'
     hook.load_file(
         filename=cleaned_json_path,
         key=target_key,
         bucket_name=target_bucket,
         replace=True
     )
+
     print(f"Cleaned JSON saved to {cleaned_json_path}")
 
 # DEFINICIÓN DEL DAG
