@@ -3,16 +3,18 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-
+from dags_util import check_file_exists
 # CONSTANTES
 BUCKET_NAME = 'modulo-2-pi-bronze'
 JSON_KEY = 'valor_dolar/2025-08-08.json'
 
-def check_file_exists(key, **kwargs):
-    hook = S3Hook()
-    if not hook.check_for_key(key, bucket_name=BUCKET_NAME):
-        raise FileNotFoundError(f"El archivo {key} no existe en el bucket {BUCKET_NAME}")
-    print(f"Archivo {key} encontrado correctamente")
+# def check_file_exists(key, **kwargs):
+#     hook = S3Hook()
+#     if not hook.check_for_key(key, bucket_name=BUCKET_NAME):
+#         raise FileNotFoundError(f"El archivo {key} no existe en el bucket {BUCKET_NAME}")
+#     print(f"Archivo {key} encontrado correctamente")
+
+
 
 def clean_json(**kwargs):
     hook = S3Hook()
@@ -35,7 +37,7 @@ def clean_json(**kwargs):
         # Subir CSV limpio a bucket modulo-2-pi-silver, carpeta cleaned/
 
     target_bucket = 'modulo-2-pi-silver'
-    target_key = 'cleaned/2025-08-08.jsonv'
+    target_key = 'cleaned/2025-08-08.json'
     hook.load_file(
         filename=cleaned_json_path,
         key=target_key,
@@ -55,7 +57,7 @@ with DAG(
     check_json = PythonOperator(
         task_id='check_json_exists',
         python_callable=check_file_exists,
-        op_kwargs={'key': JSON_KEY},
+        op_kwargs={'key': JSON_KEY, 'bucket_name': BUCKET_NAME},
     )
 
     clean_json_task = PythonOperator(

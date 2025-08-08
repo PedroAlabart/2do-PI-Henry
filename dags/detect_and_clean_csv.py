@@ -4,6 +4,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from datetime import datetime, timedelta
 import pandas as pd
 import io
+from dags_util import check_file_exists
 
 BUCKET_NAME = 'modulo-2-pi-bronze'
 CSV_KEY = 'products-1000/products-1000.csv'
@@ -16,12 +17,12 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-def check_file_exists(key, **kwargs):
-    hook = S3Hook()
-    if hook.check_for_key(key, bucket_name=BUCKET_NAME):
-        return True
-    else:
-        raise ValueError(f"File {key} not found in bucket {BUCKET_NAME}")
+# def check_file_exists(key, **kwargs):
+#     hook = S3Hook()
+#     if hook.check_for_key(key, bucket_name=BUCKET_NAME):
+#         return True
+#     else:
+#         raise ValueError(f"File {key} not found in bucket {BUCKET_NAME}")
 
 def clean_csv(**kwargs):
     hook = S3Hook()
@@ -64,7 +65,8 @@ with DAG(
     check_csv = PythonOperator(
         task_id='check_csv_exists',
         python_callable=check_file_exists,
-        op_kwargs={'key': CSV_KEY},
+        op_kwargs={'key': CSV_KEY, 'bucket_name': BUCKET_NAME},
+
     )
     
     clean_csv_task = PythonOperator(
