@@ -78,6 +78,8 @@ Retención estimada: Baja (0.5 años).
 ![Arquitectura del Pipeline](images/architecture.png)
 
 
+Ejemplo del life cycle en la capa bronze
+![life cycle en la capa bronze](images/bronze_lifecycle.png)
 
 ❓ Preguntas de Negocio
 ✅ 1. ¿Qué categorías de productos tienen mayor valor promedio por unidad?
@@ -110,8 +112,11 @@ docker run \
   -e ACCESS_KEY=YOUR_ACCESS_KEY \
   -e SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY \
   henry-2do-pi
-
 ```
+```bash
+docker compose up -d
+```bash
+
 🔐 Permisos y Seguridad
 Se otorgaron permisos IAM a un usuario externo de AWS para que pueda orquestar Airflow y acceder a los buckets.
 
