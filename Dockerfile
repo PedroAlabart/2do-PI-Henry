@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "extract.py"]
+CMD ["python", "extract_facade.py"]

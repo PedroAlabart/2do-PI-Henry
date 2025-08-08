@@ -10,6 +10,10 @@ Transformacion: Airflow para limpiar la base de datos
 
 Load: Cargado a un refined mart en un futuro data warehouse
 
+Almacenamiento:
+-bronce se da en S3 de amazon
+-silver tambien
+-gold tambien
 
 
 Capas de la data:
@@ -85,3 +89,8 @@ Datos históricos obtenidos de la misma fuente pública.
 La métrica reviews_per_month ya viene calculada, lo que simplifica el análisis.
 
 Posible ruido en casos con pocas reviews totales, pero mitigable filtrando.
+
+
+docker run tiene que ser llamado con
+
+docker run -e ACCESS_KEY=ACCES_KEY -e SECRET_ACCESS_KEY=SECRET_ACCESS_KEY henry-2do-pi
